@@ -21,6 +21,12 @@ build: clean
 	@echo "Building..."
 	@go build -o ${APPLICATION} main.go
 
+.PHONY: build
+## install: install the application
+install:
+	@echo "Installing..."
+	@go install ./...
+
 .PHONY: run
 ## run: runs go run main.go
 run:
