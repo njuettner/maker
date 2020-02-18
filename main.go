@@ -1,12 +1,18 @@
-# maker
+package main
 
-Creates Makefile for Go projects
+import (
+	"fmt"
+	"os"
+	"text/template"
 
-```make
-APPLICATION   ?= example
-REGISTRY      ?= njuettner
+	log "github.com/sirupsen/logrus"
+)
+
+var makefile = `APPLICATION   ?= {{.Application}}
+REGISTRY      ?= {{.Registry}}
 VERSION       ?= $(shell git describe --tags --always --dirty)
 TAG           ?= $(VERSION)
+BUILD_FLAGS   ?= -v
 LDFLAGS       ?= -X main.version=$(VERSION) -w -s
 
 .PHONY: build
@@ -43,14 +49,14 @@ setup:
 		&& go mod tidy \
 		&& go mod vendor
 
-.PHONY: docker.build
+.PHONY: docker-build
 ## docker-build: builds docker image to registry
 docker-build: build
 	docker build -t ${APPLICATION}:${TAG} .
 
-.PHONY: docker.push
+.PHONY: docker-push
 ## docker-push: pushes docker image to registry
-docker-push: docker.build
+docker-push: docker-build
 	docker push ${REGISTRY}/${APPLICATION}:${TAG}
 
 .PHONY: help
@@ -58,4 +64,24 @@ docker-push: docker.build
 help:
 	@echo "Usage: \n"
 	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/ /'
-```
+`
+
+type Config struct {
+	Application string
+	Registry    string
+}
+
+func main() {
+	file, err := os.Create("Makefile")
+	if err != nil {
+		log.Fatalf("Unable to create 'Makefile', %s", err)
+	}
+	config := &Config{}
+	makefileTemplate := template.New("Makefile")
+	t := template.Must(makefileTemplate.Parse(makefile))
+	fmt.Println("Please enter the name of your application:")
+	fmt.Fscanln(os.Stdin, &config.Application)
+	fmt.Println("Please enter the url of registry, e.g. docker user:")
+	fmt.Fscanln(os.Stdin, &config.Registry)
+	t.Execute(file, config)
+}
