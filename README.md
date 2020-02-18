@@ -2,6 +2,29 @@
 
 Creates Makefile for Go projects
 
+## Usage
+
+```console
+make help
+```
+
+```console
+Usage:
+
+  build          build the application
+  install        install the application
+  run            runs go run main.go
+  clean          cleans the binary
+  lint           runs golangci-lint
+  test           runs go test with default values
+  setup          setup go modules
+  docker-build   builds docker image to registry
+  docker-push    pushes docker image to registry
+  help           Prints this help message
+```
+
+## Example Makefile:
+
 ```make
 APPLICATION   ?= example
 REGISTRY      ?= njuettner
