@@ -11,16 +11,18 @@ make help
 ```console
 Usage:
 
-  build          build the application
+  build          builds a local binary
+  build-linux    builds binary for linux/amd64
+  build-darwin   builds binary for darwin/amd64
   install        install the application
   run            runs go run main.go
   clean          cleans the binary
   lint           runs golangci-lint
   test           runs go test with default values
   setup          setup go modules
-  docker-build   builds docker image to registry
-  docker-push    pushes docker image to registry
-  help           Prints this help message
+  build-docker   builds docker image to registry
+  push-docker    pushes docker image to registry
+  help           prints this help message
 ```
 
 ## Example Makefile:
@@ -29,35 +31,53 @@ Usage:
 APPLICATION   ?= example
 REGISTRY      ?= njuettner
 VERSION       ?= $(shell git describe --tags --always --dirty)
+SOURCES       = $(shell find . -name '*.go')
+GOPKGS        = $(shell go list ./...)
 TAG           ?= $(VERSION)
+BUILD_FLAGS   ?= -v
 LDFLAGS       ?= -X main.version=$(VERSION) -w -s
 
+default: build
+
 .PHONY: build
-## build: build the application
-build: clean
-	@echo "Building..."
-	@go build -o ${APPLICATION} main.go
+## build: builds a local binary
+build: clean $(SOURCES)
+	CGO_ENABLED=0 go build -o ${APPLICATION} $(BUILD_FLAGS) .
+
+.PHONY: build-linux
+## build-linux: builds binary for linux/amd64
+build-linux: clean $(SOURCES)
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build $(BUILD_FLAGS) .
+
+.PHONY: build-darwin
+## build-darwin: builds binary for darwin/amd64
+build-darwin: clean $(SOURCES)
+	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build $(BUILD_FLAGS) .
+
+.PHONY: install
+## install: install the application
+install: $(SOURCES)
+	go install .
 
 .PHONY: run
 ## run: runs go run main.go
-run:
-	go run -race main.go
+run: $(SOURCES)
+	go run -race .
 
 .PHONY: clean
 ## clean: cleans the binary
 clean:
-	@echo "Cleaning"
-	@go clean
+	go clean
 
 .PHONY: lint
 ## lint: runs golangci-lint
 lint:
-	golangci-lint run --timeout=5m ./...
+	golangci-lint run --timeout=10m ./...
 
 .PHONY: test
 ## test: runs go test with default values
 test:
-	go test -v -count=1 -race ./...
+	go test -v -race -cover $(GOPKGS)
 
 .PHONY: setup
 ## setup: setup go modules
@@ -66,18 +86,18 @@ setup:
 		&& go mod tidy \
 		&& go mod vendor
 
-.PHONY: docker.build
-## docker-build: builds docker image to registry
-docker-build: build
+.PHONY: build-docker
+## build-docker: builds docker image to registry
+build-docker: build-linux
 	docker build -t ${APPLICATION}:${TAG} .
 
-.PHONY: docker.push
-## docker-push: pushes docker image to registry
-docker-push: docker.build
+.PHONY: push-docker
+## push-docker: pushes docker image to registry
+push-docker: build-docker
 	docker push ${REGISTRY}/${APPLICATION}:${TAG}
 
 .PHONY: help
-## help: Prints this help message
+## help: prints this help message
 help:
 	@echo "Usage: \n"
 	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/ /'
