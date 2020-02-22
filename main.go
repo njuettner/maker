@@ -68,7 +68,7 @@ setup:
 
 .PHONY: build-docker
 ## build-docker: builds docker image to registry
-build-docker: build
+build-docker: build-linux
 	docker build -t ${APPLICATION}:${TAG} .
 
 .PHONY: push-docker
