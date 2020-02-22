@@ -1,8 +1,12 @@
 # maker
+
+
 <p>
   <a href="https://github.com/njuettner/maker/releases/latest"><img alt="GitHub release" src="https://img.shields.io/github/v/release/njuettner/maker.svg?logo=github&style=flat-square"></a>
   <a href="https://github.com/njuettner/maker/actions?workflow=goreleaser"><img alt="Release workflow" src="https://github.com/njuettner/maker/workflows/goreleaser/badge.svg"></a>
 </p>
+
+<p> <img src="https://storage.googleapis.com/gopherizeme.appspot.com/gophers/06f6382b7163f5ec7fc16c87deb7b1f980920da8.png" height="20%" width="20%"> </p>
 
 Creates Makefile for Go projects
 
